@@ -36,7 +36,7 @@
         </div>
 
         <div class="mt-4">
-            <x-secondary-button class="w-full justify-center">
+            <x-secondary-button type="submit" class="w-full justify-center">
                 {{ __('Login') }}
             </x-secondary-button>
         </div>
