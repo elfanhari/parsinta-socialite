@@ -21,9 +21,6 @@ class User extends Authenticatable
     'name',
     'email',
     'password',
-    'provider_id',
-    'provider_token',
-    'provider_refresh_token',
   ];
 
   /**
@@ -47,5 +44,10 @@ class User extends Authenticatable
       'email_verified_at' => 'datetime',
       'password' => 'hashed',
     ];
+  }
+
+  public function userSocials()
+  {
+    return $this->hasMany(UserSocial::class);
   }
 }

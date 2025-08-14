@@ -21,21 +21,41 @@ class SocialiteController extends Controller
   {
     $providerUser = Socialite::driver($provider->value)->user();
     // $providerUser = Socialite::driver($provider->value)->stateless()->user();
+    $user = $this->getExistingUser($providerUser, $provider->value);
 
-    $user = User::updateOrCreate(
-      [
-        'provider_id' => $providerUser->getId(),
-      ],
-      [
+    if (!$user) {
+      $user = User::create([
         'name' => $providerUser->getName(),
         'email' => $providerUser->getEmail(),
-        'provider_token' => $providerUser->token,
-        'provider_refresh_token' => $providerUser->refreshToken,
-      ]
-    );
+      ]);
+    }
+
+    if (!$this->needsToCreateSocial($user, $provider->value)) {
+      $user->userSocials()->create([
+        'provider_id' => $providerUser->getId(),
+        'provider_name' => $provider->value,
+      ]);
+    }
 
     Auth::login($user);
 
     return redirect('/dashboard');
+  }
+
+  protected function getExistingUser($providerUser, $provider)
+  {
+    $user = User::where('email', $providerUser->getEmail())->orWhereHas(
+      'userSocials',
+      function ($social) use ($providerUser, $provider) {
+        $social->where('provider_id', $providerUser->getId())->where('provider_name', $provider);
+      }
+    )->first();
+    return $user;
+  }
+
+  protected function needsToCreateSocial(User $user, $provider)
+  {
+    return (bool) $user->userSocials
+      ->where('provider_name', $provider)->count();
   }
 }
